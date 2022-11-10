@@ -1,0 +1,120 @@
+---
+title: "Drought_Index_Calculation"
+output: html_document
+date: "Sys.Date()"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Necessary packages 
+set.seed(2107)
+
+# load packages
+library(forecast)     # for time series modeling
+library(xts)          # extensible time-series
+
+library(copula)       # Multivariate Dependence Modeling with Copulas
+library(VineCopula)
+library(kdecopula)
+```
+
+
+## Uploading Necessary Data
+
+```{r data}
+library(readxl)
+aksehir <- read_excel("aksehir.xlsx")
+StatDATA <- aksehir
+```
+
+## Making Necessary Changes
+
+```{r changes, warning=F, message=F}
+# Uploading date 
+library(readr)
+date <- read_csv("date.csv")
+date <- date[, 1:2]
+
+colnames(date) <- c('MM/DD/YY', 'MM-YY')
+```
+
+
+
+```{r}
+# create 'ts' object from loaded data
+colnames(StatDATA) <- c("Month", "Year", "PREC", "TMean" , "RH", "PET")
+
+DATA_TS <- ts(StatDATA, start = c(1950, 1), frequency = 12)
+```
+
+## Calculation of PET 
+
+```{r}
+#Creating PET data using SPEI package
+library(SPEI)
+PET <- matrix(0, nrow = nrow(StatDATA), ncol = 1)
+
+#Compute PET using thornthwhite method with TMEAN data
+PET <- thornthwaite(StatDATA$TMean, lat = 38.3688, na.rm = FALSE)
+
+# New data after adding PET 
+StatDATA <- cbind(StatDATA, PET)
+
+colnames(StatDATA) <- c("Month", "Year", "PREC", "TMean" , "RH", "PET")
+
+```
+
+## Saving the new data
+
+```{r}
+# Store the new Data including PET as well
+DATA_new <- StatDATA
+write.csv(DATA_new, "aksehirPET.csv")
+
+```
+
+
+## EDA 
+
+
+```{r drough}
+# variable names, dimension, sample size
+vnames <- colnames(DATA_new)
+
+d <- length(vnames)
+N <- dim(DATA_new)[1]
+summary(DATA_new[, c('PREC', 'TMean', 'RH', 'PET')])
+```
+
+### Data Visualization part
+
+```{r}
+# create 'ts' object from kuluINPUT data
+DATA_RAWTS <- ts(DATA_new, start = c(1950, 1), frequency = 12)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
